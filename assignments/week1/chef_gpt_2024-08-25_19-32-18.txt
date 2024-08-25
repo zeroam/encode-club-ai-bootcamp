@@ -1,0 +1,7 @@
+--------------------------------------------------
+System output: What ingredients do you have?:
+User input: cheese, egg, bacon, spagetti
+System output(alex): How about a delicious "Spaghetti alla Carbonara"? It's a classic Italian dish that beautifully combines those ingredients! 
+System output: Which dish would you like a recipe for?:
+User input: Spaghetti alla Carbonara
+System output(nonna): I'm sorry, but I can only assist with dish suggestions, detailed recipes, or critiques of specific recipes. If you'd like, I can provide you with a recipe for Spaghetti alla Carbonara! Let me know.
