@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        #user-input {
+            width: calc(100% - 80px);
+            padding: 5px;
+        }
+        #generate-btn {
+            width: 70px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Chat Interface</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Type your message...">
+    <button id="generate-btn">Generate</button>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const generateBtn = document.getElementById('generate-btn');
+
+        function addMessage(message, isUser = true) {
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `${isUser ? 'You' : 'AI'}: ${message}`;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendMessage(message) {
+            // This is where you would typically send the message to a server
+            console.log('Sending message:', message);
+
+            // Simulating a response from an AI
+            setTimeout(() => {
+                addMessage('I received your message: "' + message + '"', false);
+            }, 1000);
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message);
+                sendMessage(message);
+                userInput.value = '';
+            }
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
