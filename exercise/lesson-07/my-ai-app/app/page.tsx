@@ -14,6 +14,8 @@ export default function Chat() {
   } = useChat();
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
+  const [audio, setAudio] = useState<string | null>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +45,40 @@ export default function Chat() {
           value={messages[messages.length - 1].content}
           readOnly
         />
+        <div className="flex flex-col justify-center mb-2 items-center">
+          {
+            audio && (
+              <>
+                <p>Listen to the recipe:</p>
+                <audio controls src={audio} className="w-full"></audio>
+              </>
+            )
+          }
+          {isAudioLoading && !audio && (
+            <p>Audio is being generated...</p>
+          )}
+          {!isAudioLoading && !audio && (
+            <button className="bg-blue-500 p-2 text-white rounded shadow-xl" onClick={async () => {
+              setIsAudioLoading(true);
+              const response = await fetch("/api/audio", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  message: messages[messages.length - 1].content,
+                }),
+              });
+              const audioBlob = await response.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
+
+              setAudio(audioUrl);
+              setIsAudioLoading(false);
+            }}>
+              Generate Audio
+            </button>
+          )}
+        </div>
       </div>
     );
   }
