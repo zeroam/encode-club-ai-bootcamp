@@ -6,9 +6,6 @@ import { useEffect, useRef, useState } from "react";
 export default function Chat() {
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
     isLoading,
     append,
   } = useChat();
