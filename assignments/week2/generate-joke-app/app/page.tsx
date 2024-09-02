@@ -1,112 +1,274 @@
-import Image from "next/image";
+"use client";
+
+import { useChat } from "ai/react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Lightbulb,
+  Smile,
+  MessageSquare,
+  Thermometer,
+  Zap,
+  ThumbsUp,
+  Check,
+  X,
+  Bot,
+} from "lucide-react";
 
 export default function Home() {
+  const [topic, setTopic] = useState("");
+  const [tone, setTone] = useState("funny");
+  const [jokeType, setJokeType] = useState("one-liner");
+  const [isGenerateDisabled, setIsGenerateDisabled] = useState(true);
+  const [temperature, setTemperature] = useState(1);
+  const [generatedJoke, setGeneratedJoke] = useState("");
+  const [evaluation, setEvaluation] = useState("");
+  const [aiMessage, setAiMessage] = useState("");
+  const { messages, setMessages, append } = useChat({
+    api: "/api/chat",
+    body: {
+      temperature,
+    },
+  });
+  const {
+    messages: evaluationMessages,
+    setMessages: setEvaluationMessages,
+    append: appendEvaluation,
+  } = useChat({
+    api: "/api/evaluate",
+  });
+
+  const initializeMessages = () => {
+    setMessages([]);
+    setEvaluationMessages([]);
+    setGeneratedJoke("");
+    setEvaluation("");
+    setAiMessage("");
+  };
+
+  const generateJoke = async () => {
+    initializeMessages();
+    append({
+      role: "user",
+      content: `
+      Topic: ${topic}
+      Tone: ${tone}
+      Joke Type: ${jokeType}
+      `,
+    });
+  };
+
+  useEffect(() => {
+    const isFormValid = topic && tone && jokeType;
+    if (!isFormValid) {
+      setIsGenerateDisabled(true);
+      return;
+    }
+    setIsGenerateDisabled(false);
+  }, [topic, tone, jokeType]);
+
+  useEffect(() => {
+    if (messages.length < 2) {
+      return;
+    }
+    setGeneratedJoke(messages[messages.length - 1]?.content);
+  }, [messages]);
+
+  const evaluateJoke = () => {
+    appendEvaluation({
+      role: "user",
+      content: `Evaluate the joke: ${generatedJoke}`,
+    });
+  };
+
+  useEffect(() => {
+    if (evaluationMessages.length < 2) {
+      return;
+    }
+    const message = evaluationMessages[evaluationMessages.length - 1].content;
+    if (message.toLowerCase().includes("funny")) {
+      setEvaluation("funny");
+    } else if (message.toLowerCase().includes("appropriate")) {
+      setEvaluation("appropriate");
+    } else if (message.toLowerCase().includes("offensive")) {
+      setEvaluation("offensive");
+    }
+    setAiMessage(message);
+  }, [evaluationMessages]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <main className="min-h-screen w-full bg-gray-900 p-3 text-gray-100">
+      <h1 className="mb-8 text-center text-3xl font-bold text-purple-400">
+        AI Joke Generator
+      </h1>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="topic" className="text-gray-300">
+              <Lightbulb className="mr-2 inline-block h-4 w-4" />
+              Topic
+            </Label>
+            <Select value={topic} onValueChange={setTopic}>
+              <SelectTrigger
+                id="topic"
+                className="border-gray-700 bg-gray-800 text-gray-100"
+              >
+                <SelectValue placeholder="Select a topic" />
+              </SelectTrigger>
+              <SelectContent className="border-gray-700 bg-gray-800 text-gray-100">
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="food">Food</SelectItem>
+                <SelectItem value="animals">Animals</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="movies">Movies</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tone" className="text-gray-300">
+              <Smile className="mr-2 inline-block h-4 w-4" />
+              Tone
+            </Label>
+            <Select value={tone} onValueChange={setTone}>
+              <SelectTrigger
+                id="tone"
+                className="border-gray-700 bg-gray-800 text-gray-100"
+              >
+                <SelectValue placeholder="Select tone" />
+              </SelectTrigger>
+              <SelectContent className="border-gray-700 bg-gray-800 text-gray-100">
+                <SelectItem value="funny">Funny</SelectItem>
+                <SelectItem value="sarcastic">Sarcastic</SelectItem>
+                <SelectItem value="dry">Dry</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="jokeType" className="text-gray-300">
+              <MessageSquare className="mr-2 inline-block h-4 w-4" />
+              Type of Joke
+            </Label>
+            <Select value={jokeType} onValueChange={setJokeType}>
+              <SelectTrigger
+                id="jokeType"
+                className="border-gray-700 bg-gray-800 text-gray-100"
+              >
+                <SelectValue placeholder="Select joke type" />
+              </SelectTrigger>
+              <SelectContent className="border-gray-700 bg-gray-800 text-gray-100">
+                <SelectItem value="one-liner">One-liner</SelectItem>
+                <SelectItem value="pun">Pun</SelectItem>
+                <SelectItem value="knock-knock">Knock-knock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="temperature" className="text-gray-300">
+              <Thermometer className="mr-2 inline-block h-4 w-4" />
+              Temperature: {temperature}
+            </Label>
+            <Slider
+              id="temperature"
+              min={0}
+              max={2}
+              step={0.1}
+              value={[temperature]}
+              onValueChange={(value) => setTemperature(value[0])}
+              className="bg-gray-800"
             />
-          </a>
+          </div>
+
+          <Button
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            disabled={isGenerateDisabled}
+            onClick={generateJoke}
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            Generate Joke
+          </Button>
         </div>
-      </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+        <div className="space-y-6">
+          {generatedJoke ? (
+            <div className="flex h-full flex-col rounded-lg bg-gray-800 p-4">
+              <p className="mb-4 flex-grow text-xl font-medium text-gray-200">
+                {generatedJoke}
+              </p>
+              {!evaluation && (
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={() => evaluateJoke()}
+                >
+                  <ThumbsUp className="mr-2 h-4 w-4" />
+                  Evaluate Joke
+                </Button>
+              )}
+              {evaluation && (
+                <div className="mt-4 flex space-x-2">
+                  <Button
+                    variant={evaluation === "funny" ? "default" : "outline"}
+                    className={
+                      evaluation === "funny"
+                        ? "flex-1 bg-green-600 hover:bg-green-700"
+                        : "flex-1 bg-gray-400"
+                    }
+                  >
+                    <Smile className="mr-2 h-4 w-4" />
+                    Funny
+                  </Button>
+                  <Button
+                    variant={
+                      evaluation === "appropriate" ? "default" : "outline"
+                    }
+                    className={
+                      evaluation === "appropriate"
+                        ? "flex-1 bg-blue-600 hover:bg-blue-700"
+                        : "flex-1 bg-gray-400 disabled:bg-gray-300"
+                    }
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Appropriate
+                  </Button>
+                  <Button
+                    variant={evaluation === "offensive" ? "default" : "outline"}
+                    className={
+                      evaluation === "offensive"
+                        ? "flex-1 bg-red-600 hover:bg-red-700"
+                        : "flex-1 bg-gray-400 disabled:bg-gray-300"
+                    }
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Offensive
+                  </Button>
+                </div>
+              )}
+              {aiMessage && (
+                <div className="mt-4 flex items-start rounded-lg bg-gray-700 p-3">
+                  <Bot className="mr-2 mt-1 h-5 w-5 text-purple-400" />
+                  <p className="text-sm text-gray-200">{aiMessage}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center rounded-lg bg-gray-800 p-4">
+              <p className="text-xl text-gray-400">
+                Your generated joke will appear here
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
